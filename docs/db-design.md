@@ -39,7 +39,9 @@ URLパスの `{id}` から PK/SK を復元する。storeId はURLパスから取
 
 ### ShiftRequest
 - POST `/requests`：PK+SK で Put（同一キーは上書き＝希望の出し直し）。
-- GET `/requests`：PK 完全一致で全スタッフの希望を取得。期間絞り込みは SK を `between DATE#{from} ～ DATE#{to}`。
+- GET `/requests`：PK 完全一致 + SK `between DATE#{from} ～ DATE#{to}` で**期間指定取得**。
+  - `from`/`to` は**必須**（全件取得は許可しない＝データ大量化を防ぐ）。
+  - デフォルト期間はバックエンドで補完せず、フロント側が明示的に指定する（ユーザーに見える形で期間を扱う）。
 - DELETE `/requests/{id}`：`{id}`=`date#staffId` から SK を復元し1件削除。
 
 ### ShiftRequirement
