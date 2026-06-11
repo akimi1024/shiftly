@@ -1,15 +1,15 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from app.utils.auth import require_manager
 from app.schemas.shift_request import ShiftRequestCreate
 from app.services.shift_request import create_request, list_requests
 from app.services.shift_request import delete_request as delete_request_service
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_manager)])
 
 
 @router.post("/stores/{storeId}/requests")
 async def post_shift(storeId: str, body: ShiftRequestCreate):
     return create_request(storeId, body)
-
 
 @router.get("/stores/{storeId}/requests")
 async def get_shift(storeId: str, date_from: str, date_to: str):
