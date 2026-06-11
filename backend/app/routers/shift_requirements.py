@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.utils.auth import require_manager
+from app.utils.deps import verify_store_exists
 from app.schemas.shift_requirement import ShiftRequirementCreate, ShiftRequirementUpdate
 from app.models.shift_requirement import ShiftRequirement
 from app.services.shift_requirement import create_requirement, list_requirements, update_requirement
 from app.services.shift_requirement import delete_requirement as delete_requirement_service
 
-router = APIRouter(dependencies=[Depends(require_manager)])
+router = APIRouter(dependencies=[Depends(require_manager), Depends(verify_store_exists)])
 
 
 @router.post("/stores/{storeId}/requirements")
