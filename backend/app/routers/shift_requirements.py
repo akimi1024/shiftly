@@ -25,7 +25,10 @@ async def put_requirement(storeId: str, id: str, body: ShiftRequirementUpdate):
     except ShiftRequirement.DoesNotExist:
         raise HTTPException(status_code=404, detail="requirement not found")
 
-@router.delete("/stores/{storeId}/requirements/{id}")
-async def delete_request(storeId: str, id: str):
+@router.delete("/stores/{storeId}/requirements/{id}", status_code=204)
+async def delete_requirement(storeId: str, id: str):
     date, start_time = id.split("#")
-    return delete_requirement_service(storeId, date, start_time)
+    try:
+        delete_requirement_service(storeId, date, start_time)
+    except ShiftRequirement.DoesNotExist:
+        raise HTTPException(status_code=404, detail="shiftRequirement not found")

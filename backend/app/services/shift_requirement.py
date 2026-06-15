@@ -52,4 +52,5 @@ def update_requirement(store_id: str, date: str, start_time: str, req: ShiftRequ
 def delete_requirement(store_id: str, date: str, start_time: str) -> None:
     pk = RequirementKey.pk(store_id)
     sk = RequirementKey.sk(date, start_time)
-    ShiftRequirement(pk, sk).delete()
+    target = ShiftRequirement.get(pk, sk)
+    target.delete()

@@ -36,3 +36,13 @@ class StoreKey(BaseKey):
     @staticmethod
     def sk() -> str:
         return "PROFILE"
+
+
+class ShiftKey(BaseKey):
+    @staticmethod
+    def pk(store_id: str) -> str:
+        return f"STORE#{store_id}#TYPE#SHIFT"
+
+    @staticmethod
+    def sk(date: str, staff_id: str) -> str:
+        return f"DATE#{date}#{staff_id}"

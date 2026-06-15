@@ -9,12 +9,12 @@
 
 ## 次にやること
 - [x] ① ディレクトリ構成の作成
-- [ ] ② CDK初期構築
-- [ ] ③ DynamoDB・PynamoDBモデル定義
-- [ ] ④ ShiftRequest API実装
-- [ ] ⑤ ShiftRequirement API実装
-- [ ] ⑥ Shortage API実装
-- [ ] ⑦ Shift API実装
+- [x] ② CDK初期構築
+- [x] ③ DynamoDB・PynamoDBモデル定義
+- [x] ④ ShiftRequest API実装
+- [x] ⑤ ShiftRequirement API実装
+- [x] ⑥ Shortage API実装
+- [x] ⑦ Shift API実装
 - [ ] ⑧ フロント実装
 - [ ] ⑨ 結合テスト・デバッグ
 - [ ] ⑩ AWSデプロイ

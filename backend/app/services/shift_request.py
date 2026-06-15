@@ -42,4 +42,5 @@ def list_requests(store_id: str, date_from: str, date_to: str) -> list[ShiftRequ
 def delete_request(store_id: str, date: str, staff_id: str) -> None:
     pk = RequestKey.pk(store_id)
     sk = RequestKey.sk(date, staff_id)
-    ShiftRequest(pk, sk).delete()
+    target = ShiftRequest.get(pk, sk)
+    target.delete()

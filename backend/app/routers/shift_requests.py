@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from app.utils.auth import require_manager
 from app.utils.deps import verify_store_exists
 from app.schemas.shift_request import ShiftRequestCreate
 from app.services.shift_request import create_request, list_requests
 from app.services.shift_request import delete_request as delete_request_service
+from app.models.shift_request import ShiftRequest
 
 router = APIRouter(dependencies=[Depends(require_manager), Depends(verify_store_exists)])
 
@@ -16,7 +17,10 @@ async def post_shift(storeId: str, body: ShiftRequestCreate):
 async def get_shift(storeId: str, date_from: str, date_to: str):
     return list_requests(storeId, date_from, date_to)
 
-@router.delete("/stores/{storeId}/requests/{id}")
+@router.delete("/stores/{storeId}/requests/{id}", status_code=204)
 async def delete_request(storeId: str, id: str):
     date, staff_id = id.split("#")
-    return delete_request_service(storeId, date, staff_id)
+    try:
+        delete_request_service(storeId, date, staff_id)
+    except ShiftRequest.DoesNotExist:
+        raise HTTPException(status_code=404, detail="Request not found")
