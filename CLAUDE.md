@@ -79,9 +79,18 @@ shiftly/
 ---
 
 ## DynamoDBキー設計方針
-- 店舗×日付で引けるようにする
-- PK: `STORE#{storeId}#DATE#{date}`
-- SK: `TYPE#{entityType}#...`
+- シングルテーブル設計（テーブル: `shiftly`、PK+SKの複合キー）
+- 店舗で束ね（PK）、日付・時間帯・スタッフで範囲/区別（SK）する
+- 種別は PK の `TYPE#XXX` で棚を分ける（Storeのみ1件確定のためTYPE無し）
+- 詳細・アクセスパターンは `docs/db-design.md` を参照
+
+| エンティティ | PK | SK |
+|---|---|---|
+| Store | `STORE#{storeId}` | `PROFILE` |
+| Staff | `STORE#{storeId}#TYPE#STAFF` | `STAFF#{staffId}` |
+| ShiftRequest | `STORE#{storeId}#TYPE#REQUEST` | `DATE#{date}#{staffId}` |
+| ShiftRequirement | `STORE#{storeId}#TYPE#REQUIREMENT` | `DATE#{date}#{start_time}` |
+| Shift | `STORE#{storeId}#TYPE#SHIFT` | `DATE#{date}#{staffId}` |
 
 ---
 
@@ -110,7 +119,7 @@ shiftly/
 ### Shift
 | メソッド | エンドポイント | 説明 |
 |---|---|---|
-| POST | `/stores/{storeId}/shifts` | 確定シフトを登録（最大15日分） |
+| POST | `/stores/{storeId}/shifts` | 確定シフトを一括登録（Bodyの対象期間内のみ許可。期間外が1件でもあれば全体を拒否） |
 | PUT | `/stores/{storeId}/shifts/{id}` | 確定シフトを1件修正 |
 | GET | `/stores/{storeId}/shifts` | 期間指定で一覧取得 |
 | DELETE | `/stores/{storeId}/shifts/{id}` | 確定シフトを1件削除 |
