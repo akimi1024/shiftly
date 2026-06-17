@@ -1,7 +1,7 @@
 "use client"
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchRequests, createRequest } from "@/lib/api";
+import { fetchRequests, createRequest, deleteRequest } from "@/lib/api";
 
 export default function RequestsPage() {
   const { data, isLoading, isError } = useQuery({
@@ -24,7 +24,15 @@ export default function RequestsPage() {
     },
   });
 
-    function handleSubmit(e: React.FormEvent) {
+  const deleteMutation = useMutation({
+    mutationFn: ({ date, staff_id }: { date: string, staff_id: string }) =>
+      deleteRequest(date, staff_id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["requests"] });
+    }
+  });
+
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     mutation.mutate({
       date,
@@ -51,6 +59,9 @@ export default function RequestsPage() {
         {data?.map((r) => (
           <li key={`${r.date}-${r.staff_id}`}>
             日付：{r.date} 時間：{r.start_time}〜{r.end_time} {r.staff_id}
+            <button onClick={() => deleteMutation.mutate({ date: r.date, staff_id: r.staff_id })}>
+              削除
+            </button>
           </li>
         ))}
       </ul>

@@ -114,3 +114,20 @@ export async function createRequest(
     }
     return res.json();
 }
+
+// シフトリクエスト削除API
+export async function deleteRequest(
+  date: string,
+  staff_id: string
+): Promise<void>{
+  const id = encodeURIComponent(`${date}#${staff_id}`)
+  const res = await fetch(
+    `${BASE}/stores/${STORE_ID}/requests/${id}`,
+      {
+        method: "DELETE",
+        headers: {"X-Role": "manager"},
+  });
+  if(!res.ok){
+    throw new Error(`failed: ${res.status}`);
+  }
+}
