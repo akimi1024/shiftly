@@ -1,8 +1,19 @@
-"use client"
+"use client";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchRequests, createRequest, deleteRequest, createRequestBulk } from "@/lib/api";
 import { ShiftRequestResponse } from "@/types/requests";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default function RequestsPage() {
   const { data, isLoading, isError } = useQuery({
@@ -10,13 +21,11 @@ export default function RequestsPage() {
     queryFn: () => fetchRequests("2026-06-01", "2026-06-30"),
   });
 
-  // 単体登録フォームの state（4つ）
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [staffId, setStaffId] = useState("");
 
-  // 一括登録フォームの state（「行の配列」）。最初は空1行。
   const [rows, setRows] = useState<ShiftRequestResponse[]>([
     { date: "", staff_id: "", start_time: "", end_time: "" },
   ]);
@@ -38,86 +47,140 @@ export default function RequestsPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: ({ date, staff_id }: { date: string, staff_id: string }) =>
+    mutationFn: ({ date, staff_id }: { date: string; staff_id: string }) =>
       deleteRequest(date, staff_id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["requests"] });
     },
   });
 
-  // 単体登録
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     mutation.mutate({ date, start_time: startTime, end_time: endTime, staff_id: staffId });
   }
 
-  // --- 一括フォームの操作 ---
-  // 1行の1フィールドだけ更新（配列を作り直す＝イミュータブル更新）
   function updateRow(index: number, field: keyof ShiftRequestResponse, value: string) {
-    setRows((prev) =>
-      prev.map((row, i) => (i === index ? { ...row, [field]: value } : row))
-    );
+    setRows((prev) => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
   }
-  // 空の行を末尾に追加
   function addRow() {
     setRows((prev) => [...prev, { date: "", staff_id: "", start_time: "", end_time: "" }]);
   }
-  // index の行を削除
   function removeRow(index: number) {
     setRows((prev) => prev.filter((_, i) => i !== index));
   }
-  // 一括登録
   function handleBulkSubmit(e: React.FormEvent) {
     e.preventDefault();
     bulkMutation.mutate(rows);
   }
 
-  if (isLoading) return <p>読み込み中・・・</p>;
-  if (isError) return <p>エラーが発生しました</p>;
-
   return (
-    <div>
-      {/* ===== 単体登録 ===== */}
-      <h2>単体登録</h2>
-      <form onSubmit={handleSubmit}>
-        <input value={date} onChange={(e) => setDate(e.target.value)} type="date" required />
-        <input value={startTime} onChange={(e) => setStartTime(e.target.value)} type="time" required />
-        <input value={endTime} onChange={(e) => setEndTime(e.target.value)} type="time" required />
-        <input value={staffId} onChange={(e) => setStaffId(e.target.value)} type="text" placeholder="STAFF01" required />
-        <button type="submit">登録</button>
-      </form>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">シフト希望</h1>
 
-      {/* ===== 一括登録 ===== */}
-      <h2>一括登録</h2>
-      <form onSubmit={handleBulkSubmit}>
-        {rows.map((row, i) => (
-          <div key={i}>
-            <input type="date" value={row.date} onChange={(e) => updateRow(i, "date", e.target.value)} required />
-            <input type="time" value={row.start_time} onChange={(e) => updateRow(i, "start_time", e.target.value)} required />
-            <input type="time" value={row.end_time} onChange={(e) => updateRow(i, "end_time", e.target.value)} required />
-            <input type="text" value={row.staff_id} onChange={(e) => updateRow(i, "staff_id", e.target.value)} placeholder="STAFF01" required />
-            <button type="button" onClick={() => removeRow(i)}>行削除</button>
-          </div>
-        ))}
-        <button type="button" onClick={addRow}>行を追加</button>
-        <button type="submit">一括登録</button>
-      </form>
-      {bulkMutation.isError && (
-        <p style={{ color: "red" }}>一括登録に失敗：{String(bulkMutation.error)}</p>
-      )}
+      {/* 単体登録 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>単体登録</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3">
+            <div className="space-y-1">
+              <label className="text-sm text-neutral-600">日付</label>
+              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} required className="w-40" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm text-neutral-600">開始</label>
+              <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} required className="w-28" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm text-neutral-600">終了</label>
+              <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} required className="w-28" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm text-neutral-600">スタッフ</label>
+              <Input type="text" value={staffId} onChange={(e) => setStaffId(e.target.value)} placeholder="STAFF01" required className="w-32" />
+            </div>
+            <Button type="submit" disabled={mutation.isPending}>
+              {mutation.isPending ? "登録中..." : "登録"}
+            </Button>
+          </form>
+          {mutation.isError && (
+            <p className="mt-2 text-sm text-red-600">登録に失敗：{String(mutation.error)}</p>
+          )}
+        </CardContent>
+      </Card>
 
-      {/* ===== 一覧 ===== */}
-      <h2>一覧</h2>
-      <ul>
-        {data?.map((r) => (
-          <li key={`${r.date}-${r.staff_id}`}>
-            日付：{r.date} 時間：{r.start_time}〜{r.end_time} {r.staff_id}
-            <button onClick={() => deleteMutation.mutate({ date: r.date, staff_id: r.staff_id })}>
-              削除
-            </button>
-          </li>
-        ))}
-      </ul>
+      {/* 一括登録 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>一括登録</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleBulkSubmit} className="space-y-3">
+            {rows.map((row, i) => (
+              <div key={i} className="flex flex-wrap items-center gap-2">
+                <Input type="date" value={row.date} onChange={(e) => updateRow(i, "date", e.target.value)} required className="w-40" />
+                <Input type="time" value={row.start_time} onChange={(e) => updateRow(i, "start_time", e.target.value)} required className="w-28" />
+                <Input type="time" value={row.end_time} onChange={(e) => updateRow(i, "end_time", e.target.value)} required className="w-28" />
+                <Input type="text" value={row.staff_id} onChange={(e) => updateRow(i, "staff_id", e.target.value)} placeholder="STAFF01" required className="w-32" />
+                <Button type="button" variant="outline" size="sm" onClick={() => removeRow(i)}>行削除</Button>
+              </div>
+            ))}
+            <div className="flex gap-2">
+              <Button type="button" variant="secondary" onClick={addRow}>行を追加</Button>
+              <Button type="submit" disabled={bulkMutation.isPending}>
+                {bulkMutation.isPending ? "登録中..." : "一括登録"}
+              </Button>
+            </div>
+          </form>
+          {bulkMutation.isError && (
+            <p className="mt-2 text-sm text-red-600">一括登録に失敗：{String(bulkMutation.error)}</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* 一覧 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>一覧</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <p className="text-sm text-neutral-500">読み込み中・・・</p>
+          ) : isError ? (
+            <p className="text-sm text-red-600">エラーが発生しました</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>日付</TableHead>
+                  <TableHead>時間</TableHead>
+                  <TableHead>スタッフ</TableHead>
+                  <TableHead className="text-right">操作</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data?.map((r) => (
+                  <TableRow key={`${r.date}-${r.staff_id}`}>
+                    <TableCell>{r.date}</TableCell>
+                    <TableCell>{r.start_time}〜{r.end_time}</TableCell>
+                    <TableCell>{r.staff_id}</TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => deleteMutation.mutate({ date: r.date, staff_id: r.staff_id })}
+                      >
+                        削除
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
-  )
+  );
 }
