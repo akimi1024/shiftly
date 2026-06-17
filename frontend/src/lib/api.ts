@@ -51,3 +51,26 @@ export async function deleteRequirement(
     throw new Error(`failed: ${res.status}`);
   }
 }
+
+export async function updateRequirement(
+    date: string,
+    start_time: string,
+    body: { required_count: number; end_time: string }
+): Promise<ShiftRequirementResponse> {
+  const id = encodeURIComponent(`${date}#${start_time}`)
+  const res = await fetch(
+      `${BASE}/stores/${STORE_ID}/requirements/${id}`,
+      {
+        method: "PUT",
+        headers: {
+          "X-Role": "manager",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body),
+  });
+  if(!res.ok){
+    const detail = await res.text()
+    throw new Error(`failed: ${res.status} detail: ${detail}`);
+  }
+  return res.json();
+}
