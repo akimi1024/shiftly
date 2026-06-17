@@ -1,5 +1,5 @@
 from app.models.shift_request import ShiftRequest
-from app.schemas.shift_request import ShiftRequestCreate, ShiftRequestResponse
+from app.schemas.shift_request import ShiftRequestCreate, ShiftRequestResponse, ShiftRequestBulkCreate
 from app.utils.keys import RequestKey
 
 
@@ -22,6 +22,29 @@ def create_request(store_id: str, req: ShiftRequestCreate) -> ShiftRequestRespon
         end_time=req.end_time
     )
 
+def create_request_bulk(store_id: str, req: ShiftRequestBulkCreate) -> list[ShiftRequestResponse]:
+    # パスパラメータとBodyからキーを作成
+    pk = RequestKey.pk(store_id)
+
+    with ShiftRequest.batch_write() as batch:
+        for item in req.requests:
+            batch.save(ShiftRequest(
+                pk,
+                RequestKey.sk(item.date, item.staff_id),
+                date=item.date,
+                staff_id=item.staff_id,
+                start_time=item.start_time,
+                end_time=item.end_time)
+            )
+
+    return[
+        ShiftRequestResponse(
+            date=item.date,
+            staff_id=item.staff_id,
+            start_time=item.start_time,
+            end_time=item.end_time
+        ) for item in req.requests
+    ]
 
 def list_requests(store_id: str, date_from: str, date_to: str) -> list[ShiftRequestResponse]:
     pk = RequestKey.pk(store_id)

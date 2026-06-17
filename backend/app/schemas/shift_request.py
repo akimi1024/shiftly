@@ -14,3 +14,6 @@ class ShiftRequestCreate(ShiftRequestBase):
 
 class ShiftRequestResponse(ShiftRequestBase):
     pass
+
+class ShiftRequestBulkCreate(BaseModel):
+    requests: list[ShiftRequestCreate]
