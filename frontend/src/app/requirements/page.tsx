@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchRequirements, createRequirement } from "@/lib/api";
+import { fetchRequirements, createRequirement, deleteRequirement } from "@/lib/api";
 
 export default function RequirementsPage() {
   // ===== ① フック（全部ここ・先頭） =====
@@ -24,6 +24,14 @@ export default function RequirementsPage() {
       queryClient.invalidateQueries({ queryKey: ["requirements"] });
     },
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: ({date, startTime}: {date: string, startTime: string}) =>
+      deleteRequirement(date, startTime),
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ["requirements"]})
+    }
+  })
 
   // ===== ② イベントハンドラ =====
   function handleSubmit(e: React.FormEvent) {
@@ -90,6 +98,9 @@ export default function RequirementsPage() {
         {data?.map((r) => (
           <li key={`${r.date}-${r.start_time}`}>
             日付：{r.date} 時間：{r.start_time}〜{r.end_time} 必要人数：{r.required_count}人
+            <button onClick={() => deleteMutation.mutate({date: r.date, startTime: r.start_time})}>
+              削除
+            </button>
           </li>
         ))}
       </ul>

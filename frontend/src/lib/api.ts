@@ -35,3 +35,19 @@ export async function createRequirement(
     }
     return res.json();
 }
+
+export async function deleteRequirement(
+  date: string,
+  start_time: string
+): Promise<void>{
+  const id = encodeURIComponent(`${date}#${start_time}`)
+  const res = await fetch(
+    `${BASE}/stores/${STORE_ID}/requirements/${id}`,
+      {
+        method: "DELETE",
+        headers: {"X-Role": "manager"},
+  });
+  if(!res.ok){
+    throw new Error(`failed: ${res.status}`);
+  }
+}
