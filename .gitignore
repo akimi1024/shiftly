@@ -176,3 +176,6 @@ pyrightconfig.json
 # End of https://www.toptal.com/developers/gitignore/api/python
 CLAUDE.md
 TODO.md
+
+# Python template's "lib/" rule above also matches frontend/src/lib (real source). Re-include it.
+!frontend/src/lib/
