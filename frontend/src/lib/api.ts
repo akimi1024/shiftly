@@ -95,3 +95,22 @@ export async function fetchRequests(
     }
     return res.json();
 }
+
+// シフトリクエスト登録API
+export async function createRequest(
+    body: ShiftRequestResponse
+): Promise<ShiftRequestResponse> {
+    const res = await fetch(`${BASE}/stores/${STORE_ID}/requests`, {
+        method: "POST",
+        headers: {
+            "X-Role": "manager",
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+        const detail = await res.text(); // サーバが返したエラー本文を拾う
+        throw new Error(`failed: ${res.status} ${detail}`);
+    }
+    return res.json();
+}
