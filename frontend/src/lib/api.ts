@@ -128,6 +128,7 @@ export async function deleteRequest(
         headers: {"X-Role": "manager"},
   });
   if(!res.ok){
-    throw new Error(`failed: ${res.status}`);
+    const detail = await res.text();
+    throw new Error(`failed: ${res.status} detail: ${detail}`);
   }
 }
