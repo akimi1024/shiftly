@@ -6,14 +6,14 @@ def to_minutes(hhmm: str) -> int:
     hh_to_mm = hh_to_mm * 60
     return hh_to_mm + int(mm)
 
-def normalize(hhmm: str, open_hhmm: str) -> int:
-    staff_time = to_minutes(hhmm)
-    store_time = to_minutes(open_hhmm)
+def normalize(hhmm: str, open_hhmm: str, close_time: str) -> int:
+    t = to_minutes(hhmm)
+    open_m = to_minutes(open_hhmm)
+    close_m = to_minutes(close_time)
 
-    if staff_time < store_time:
-        staff_time = staff_time + DAY_MINUTES_TIME
-
-    return staff_time
+    if close_m < open_m and t <= close_m:
+        t += DAY_MINUTES_TIME
+    return t
 
 def to_hhmm(minutes: int) -> str:
     m = minutes % DAY_MINUTES_TIME
