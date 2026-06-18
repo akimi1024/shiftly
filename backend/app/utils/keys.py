@@ -46,3 +46,12 @@ class ShiftKey(BaseKey):
     @staticmethod
     def sk(date: str, staff_id: str) -> str:
         return f"DATE#{date}#{staff_id}"
+
+class StaffKey(BaseKey):
+    @staticmethod
+    def pk(store_id: str) -> str:
+        return f"STORE#{store_id}#TYPE#STAFF"
+
+    @staticmethod
+    def sk(staff_id: str) -> str:
+        return f"STAFF#{staff_id}"
