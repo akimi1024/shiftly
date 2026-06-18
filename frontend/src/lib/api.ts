@@ -1,9 +1,25 @@
 import { ShiftRequirementResponse } from "@/types/requirements";
 import { ShiftRequestResponse } from "@/types/requests";
 import { StaffResponse } from "@/types/staff";
+import { ShortageResponse } from "@/types/shortage";
 
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 const STORE_ID = process.env.NEXT_PUBLIC_STORE_ID;
+
+// 過不足取得API
+export async function fetchShortage(
+  dateFrom: string,
+  dateTo: string
+): Promise<ShortageResponse[]> {
+  const params = new URLSearchParams({ date_from: dateFrom, date_to: dateTo });
+  const res = await fetch(`${BASE}/stores/${STORE_ID}/shortage?${params}`, {
+    headers: { "X-Role": "manager" },
+  });
+  if (!res.ok) {
+    throw new Error(`failed: ${res.status}`);
+  }
+  return res.json();
+}
 
 // スタッフ一覧取得API
 export async function fetchStaff(): Promise<StaffResponse[]> {
