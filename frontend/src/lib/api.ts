@@ -1,8 +1,20 @@
 import { ShiftRequirementResponse } from "@/types/requirements";
 import { ShiftRequestResponse } from "@/types/requests";
+import { StaffResponse } from "@/types/staff";
 
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 const STORE_ID = process.env.NEXT_PUBLIC_STORE_ID;
+
+// スタッフ一覧取得API
+export async function fetchStaff(): Promise<StaffResponse[]> {
+  const res = await fetch(`${BASE}/stores/${STORE_ID}/staff`, {
+    headers: { "X-Role": "manager" },
+  });
+  if (!res.ok) {
+    throw new Error(`failed: ${res.status}`);
+  }
+  return res.json();
+}
 
 // シフト必要人数取得API
 export async function fetchRequirements(

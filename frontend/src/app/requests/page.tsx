@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchRequests, createRequest, deleteRequest, createRequestBulk } from "@/lib/api";
+import { fetchRequests, createRequest, deleteRequest, createRequestBulk, fetchStaff } from "@/lib/api";
 import { ShiftRequestResponse } from "@/types/requests";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,12 @@ export default function RequestsPage() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["requests", "2026-06-01", "2026-06-30"],
     queryFn: () => fetchRequests("2026-06-01", "2026-06-30"),
+  });
+
+  // スタッフ一覧（ドロップダウン用）
+  const { data: staffList } = useQuery({
+    queryKey: ["staff"],
+    queryFn: fetchStaff,
   });
 
   const [date, setDate] = useState("");
@@ -98,7 +104,19 @@ export default function RequestsPage() {
             </div>
             <div className="space-y-1">
               <label className="text-sm text-neutral-600">スタッフ</label>
-              <Input type="text" value={staffId} onChange={(e) => setStaffId(e.target.value)} placeholder="STAFF01" required className="w-32" />
+              <select
+                value={staffId}
+                onChange={(e) => setStaffId(e.target.value)}
+                required
+                className="h-9 w-40 rounded-md border border-neutral-200 bg-transparent px-3 text-sm"
+              >
+                <option value="">選択してください</option>
+                {staffList?.map((s) => (
+                  <option key={s.staff_id} value={s.staff_id}>
+                    {s.name}（{s.staff_id}）
+                  </option>
+                ))}
+              </select>
             </div>
             <Button type="submit" disabled={mutation.isPending}>
               {mutation.isPending ? "登録中..." : "登録"}
@@ -122,7 +140,19 @@ export default function RequestsPage() {
                 <Input type="date" value={row.date} onChange={(e) => updateRow(i, "date", e.target.value)} required className="w-40" />
                 <Input type="time" value={row.start_time} onChange={(e) => updateRow(i, "start_time", e.target.value)} required className="w-28" />
                 <Input type="time" value={row.end_time} onChange={(e) => updateRow(i, "end_time", e.target.value)} required className="w-28" />
-                <Input type="text" value={row.staff_id} onChange={(e) => updateRow(i, "staff_id", e.target.value)} placeholder="STAFF01" required className="w-32" />
+                <select
+                  value={row.staff_id}
+                  onChange={(e) => updateRow(i, "staff_id", e.target.value)}
+                  required
+                  className="h-9 w-40 rounded-md border border-neutral-200 bg-transparent px-3 text-sm"
+                >
+                  <option value="">選択してください</option>
+                  {staffList?.map((s) => (
+                    <option key={s.staff_id} value={s.staff_id}>
+                      {s.name}（{s.staff_id}）
+                    </option>
+                  ))}
+                </select>
                 <Button type="button" variant="outline" size="sm" onClick={() => removeRow(i)}>行削除</Button>
               </div>
             ))}
