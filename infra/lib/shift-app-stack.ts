@@ -6,6 +6,8 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 
 export class ShiftAppStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -31,8 +33,21 @@ export class ShiftAppStack extends cdk.Stack {
     const apiFn = new lambda.Function(this, 'ApiFunction', {
       functionName: 'shiftly-api',
       runtime: lambda.Runtime.PYTHON_3_12,
+      // ビルド環境(Apple Silicon=arm64)でbundleした wheel に合わせて Lambda も arm64 に。
+      architecture: lambda.Architecture.ARM_64,
       handler: 'lambda_handler.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '..', '..', 'backend')),
+      code: lambda.Code.fromAsset(path.join(__dirname, '..', '..', 'backend'), {
+        // Lambda と同じ Linux 環境(Docker)の中で依存を pip install してから同梱する。
+        // これで pydantic-core などのコンパイル済みwheelが Lambda 用(Linux)で入る。
+        bundling: {
+          image: lambda.Runtime.PYTHON_3_12.bundlingImage,
+          command: [
+            'bash',
+            '-c',
+            'pip install -r requirements.txt -t /asset-output && cp -au . /asset-output',
+          ],
+        },
+      }),
       memorySize: 256,
       timeout: cdk.Duration.seconds(30),
       environment: {
@@ -60,17 +75,61 @@ export class ShiftAppStack extends cdk.Stack {
     });
 
     // ------------------------------------------------------------------
-    // CloudFront: front the API Gateway (and later the Next.js frontend)
+    // S3: 静的フロント(Next.js export)の置き場（非公開、CloudFront経由のみ）
+    // ------------------------------------------------------------------
+    const siteBucket = new s3.Bucket(this, 'SiteBucket', {
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      removalPolicy: cdk.RemovalPolicy.DESTROY, // MVP: スタック削除でバケットも消す
+      autoDeleteObjects: true,
+    });
+
+    // CloudFront Function: ディレクトリ風URLを index.html に書き換え
+    //   "/" -> "/index.html", "/requirements/" -> "/requirements/index.html"
+    const rewriteToIndex = new cloudfront.Function(this, 'RewriteToIndex', {
+      code: cloudfront.FunctionCode.fromInline(
+        [
+          'function handler(event) {',
+          '  var request = event.request;',
+          '  var uri = request.uri;',
+          "  if (uri.endsWith('/')) {",
+          "    request.uri += 'index.html';",
+          "  } else if (!uri.includes('.')) {",
+          "    request.uri += '/index.html';",
+          '  }',
+          '  return request;',
+          '}',
+        ].join('\n')
+      ),
+    });
+
+    // ------------------------------------------------------------------
+    // CloudFront: フロント(S3)を配信。APIはAPI Gatewayを直叩き(別オリジン)。
     // ------------------------------------------------------------------
     const distribution = new cloudfront.Distribution(this, 'Distribution', {
       comment: 'Shiftly distribution',
+      defaultRootObject: 'index.html',
       defaultBehavior: {
-        origin: new origins.RestApiOrigin(api),
+        origin: origins.S3BucketOrigin.withOriginAccessControl(siteBucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-        cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-        originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+        functionAssociations: [
+          {
+            function: rewriteToIndex,
+            eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+          },
+        ],
       },
+      errorResponses: [
+        { httpStatus: 403, responseHttpStatus: 404, responsePagePath: '/404.html' },
+        { httpStatus: 404, responseHttpStatus: 404, responsePagePath: '/404.html' },
+      ],
+    });
+
+    // フロントのビルド成果物(frontend/out)をS3へアップロード + CloudFront無効化
+    new s3deploy.BucketDeployment(this, 'DeploySite', {
+      sources: [s3deploy.Source.asset(path.join(__dirname, '..', '..', 'frontend', 'out'))],
+      destinationBucket: siteBucket,
+      distribution,
+      distributionPaths: ['/*'],
     });
 
     // ------------------------------------------------------------------
