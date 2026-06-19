@@ -5,6 +5,7 @@ const links = [
   { href: "/requests", label: "シフト希望" },
   { href: "/shortage", label: "過不足" },
   { href: "/shifts", label: "確定シフト" },
+  { href: "/settings", label: "設定" },
 ];
 
 export default function Nav() {
