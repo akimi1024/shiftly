@@ -16,6 +16,9 @@ import {
 } from "@/components/ui/table";
 
 export default function RequestsPage() {
+  // 今日（ローカルタイムの YYYY-MM-DD）。過去日の希望入力を防ぐ min に使う
+  const today = new Date().toLocaleDateString("en-CA");
+
   const { data, isLoading, isError } = useQuery({
     queryKey: ["requests", "2026-06-01", "2026-06-30"],
     queryFn: () => fetchRequests("2026-06-01", "2026-06-30"),
@@ -92,7 +95,7 @@ export default function RequestsPage() {
           <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3">
             <div className="space-y-1">
               <label className="text-sm text-neutral-600">日付</label>
-              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} required className="w-40" />
+              <Input type="date" min={today} value={date} onChange={(e) => setDate(e.target.value)} required className="w-40" />
             </div>
             <div className="space-y-1">
               <label className="text-sm text-neutral-600">開始</label>
@@ -137,7 +140,7 @@ export default function RequestsPage() {
           <form onSubmit={handleBulkSubmit} className="space-y-3">
             {rows.map((row, i) => (
               <div key={i} className="flex flex-wrap items-center gap-2">
-                <Input type="date" value={row.date} onChange={(e) => updateRow(i, "date", e.target.value)} required className="w-40" />
+                <Input type="date" min={today} value={row.date} onChange={(e) => updateRow(i, "date", e.target.value)} required className="w-40" />
                 <Input type="time" value={row.start_time} onChange={(e) => updateRow(i, "start_time", e.target.value)} required className="w-28" />
                 <Input type="time" value={row.end_time} onChange={(e) => updateRow(i, "end_time", e.target.value)} required className="w-28" />
                 <select
