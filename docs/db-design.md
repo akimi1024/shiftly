@@ -63,8 +63,10 @@ URLパスの `{id}` から PK/SK を復元する。storeId はURLパスから取
 - DELETE `/shifts/{id}`：同上で1件削除。
 
 ### Shortage
-- GET `/shortage`：ShiftRequirement（必要人数）と ShiftRequest/Shift を突き合わせて過不足を算出。
-  - それぞれ上記の PK + SK 範囲クエリで取得して、アプリ側で集計する。
+- GET `/shortage`：ShiftRequirement（必要人数）と **Shift（確定シフト）** を突き合わせて過不足を算出。
+  - `available_count` は「その時間帯に**確定済み**のスタッフ数」。確定を進めるほど不足が減る。
+  - それぞれ上記の PK + SK 範囲クエリで取得して、アプリ側で30分バケットで集計する。
+  - 時刻正規化は閉店基準（`close<open` かつ `t<=close` のみ +1440）で、仕込み等の開店前時間も扱える。
 
 ## クエリのテクニック
 - **完全一致**：`PK = ... AND SK = ...` → 1件特定（PUT/DELETE/単一GET）。
