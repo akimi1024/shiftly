@@ -3,9 +3,54 @@ import { ShiftRequestResponse } from "@/types/requests";
 import { StaffResponse } from "@/types/staff";
 import { ShortageResponse } from "@/types/shortage";
 import { ShiftResponse } from "@/types/shift";
+import { StoreResponse } from "@/types/store";
 
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 const STORE_ID = process.env.NEXT_PUBLIC_STORE_ID;
+
+// ===== スタッフ 追加/削除（一覧 fetchStaff は上部にあり） =====
+export async function createStaff(body: { name: string; role: string }): Promise<StaffResponse> {
+  const res = await fetch(`${BASE}/stores/${STORE_ID}/staff`, {
+    method: "POST",
+    headers: { "X-Role": "manager", "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`failed: ${res.status} ${detail}`);
+  }
+  return res.json();
+}
+
+export async function deleteStaff(staffId: string): Promise<void> {
+  const res = await fetch(`${BASE}/stores/${STORE_ID}/staff/${encodeURIComponent(staffId)}`, {
+    method: "DELETE",
+    headers: { "X-Role": "manager" },
+  });
+  if (!res.ok) throw new Error(`failed: ${res.status}`);
+}
+
+// ===== 店舗（取得/更新） =====
+export async function fetchStore(): Promise<StoreResponse> {
+  const res = await fetch(`${BASE}/stores/${STORE_ID}`, {
+    headers: { "X-Role": "manager" },
+  });
+  if (!res.ok) throw new Error(`failed: ${res.status}`);
+  return res.json();
+}
+
+export async function updateStore(body: StoreResponse): Promise<StoreResponse> {
+  const res = await fetch(`${BASE}/stores/${STORE_ID}`, {
+    method: "PUT",
+    headers: { "X-Role": "manager", "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`failed: ${res.status} ${detail}`);
+  }
+  return res.json();
+}
 
 // ===== 確定シフト =====
 

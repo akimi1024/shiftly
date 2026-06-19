@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import shift_requests, shift_requirements, shortage, shifts, staff
+from app.routers import shift_requests, shift_requirements, shortage, shifts, staff, store
 
 app = FastAPI()
 
@@ -16,3 +16,4 @@ app.include_router(shift_requirements.router)
 app.include_router(shortage.router)
 app.include_router(shifts.router)
 app.include_router(staff.router)
+app.include_router(store.router)
