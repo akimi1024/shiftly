@@ -4,8 +4,7 @@ const links = [
   { href: "/requirements", label: "必要人数" },
   { href: "/requests", label: "シフト希望" },
   { href: "/shortage", label: "過不足" },
-  // 今後追加：
-  // { href: "/shifts", label: "確定シフト" },
+  { href: "/shifts", label: "確定シフト" },
 ];
 
 export default function Nav() {

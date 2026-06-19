@@ -2,9 +2,72 @@ import { ShiftRequirementResponse } from "@/types/requirements";
 import { ShiftRequestResponse } from "@/types/requests";
 import { StaffResponse } from "@/types/staff";
 import { ShortageResponse } from "@/types/shortage";
+import { ShiftResponse } from "@/types/shift";
 
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 const STORE_ID = process.env.NEXT_PUBLIC_STORE_ID;
+
+// ===== 確定シフト =====
+
+// 一覧取得（期間指定）
+export async function fetchShifts(
+  dateFrom: string,
+  dateTo: string
+): Promise<ShiftResponse[]> {
+  const params = new URLSearchParams({ date_from: dateFrom, date_to: dateTo });
+  const res = await fetch(`${BASE}/stores/${STORE_ID}/shifts?${params}`, {
+    headers: { "X-Role": "manager" },
+  });
+  if (!res.ok) throw new Error(`failed: ${res.status}`);
+  return res.json();
+}
+
+// 一括登録（period_from/period_to + shifts配列）
+export async function createShiftsBulk(
+  periodFrom: string,
+  periodTo: string,
+  shifts: ShiftResponse[]
+): Promise<ShiftResponse[]> {
+  const res = await fetch(`${BASE}/stores/${STORE_ID}/shifts`, {
+    method: "POST",
+    headers: { "X-Role": "manager", "Content-Type": "application/json" },
+    body: JSON.stringify({ period_from: periodFrom, period_to: periodTo, shifts }),
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`failed: ${res.status} ${detail}`);
+  }
+  return res.json();
+}
+
+// 1件更新（start_time / end_time のみ）
+export async function updateShift(
+  date: string,
+  staff_id: string,
+  body: { start_time: string; end_time: string }
+): Promise<ShiftResponse> {
+  const id = encodeURIComponent(`${date}#${staff_id}`);
+  const res = await fetch(`${BASE}/stores/${STORE_ID}/shifts/${id}`, {
+    method: "PUT",
+    headers: { "X-Role": "manager", "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`failed: ${res.status} ${detail}`);
+  }
+  return res.json();
+}
+
+// 1件削除
+export async function deleteShift(date: string, staff_id: string): Promise<void> {
+  const id = encodeURIComponent(`${date}#${staff_id}`);
+  const res = await fetch(`${BASE}/stores/${STORE_ID}/shifts/${id}`, {
+    method: "DELETE",
+    headers: { "X-Role": "manager" },
+  });
+  if (!res.ok) throw new Error(`failed: ${res.status}`);
+}
 
 // 過不足取得API
 export async function fetchShortage(
