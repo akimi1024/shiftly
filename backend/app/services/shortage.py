@@ -1,8 +1,8 @@
 from app.models.shift_requirement import ShiftRequirement
-from app.models.shift_request import ShiftRequest
 from app.models.store import Store
+from app.models.shift import Shift
 from app.schemas.shortage import ShortageResponse
-from app.utils.keys import StoreKey, RequestKey, RequirementKey
+from app.utils.keys import StoreKey, ShiftKey, RequirementKey
 from app.utils.timeslot import to_hhmm, normalize
 
 BUCKET = 30
@@ -16,13 +16,13 @@ def get_shortage(store_id: str, date_from: str, date_to: str) -> list[ShortageRe
         RequirementKey.pk(store_id),
         ShiftRequirement.SK.between(RequirementKey.sk_date(date_from), RequirementKey.sk_date_end(date_to))
     ))
-    request_items = list(ShiftRequest.query(
-        RequestKey.pk(store_id),
-        ShiftRequest.SK.between(RequestKey.sk_date(date_from), RequestKey.sk_date_end(date_to))
+    shift_items = list(Shift.query(
+        ShiftKey.pk(store_id),
+        Shift.SK.between(ShiftKey.sk_date(date_from), ShiftKey.sk_date_end(date_to))
     ))
 
     # 日付昇順で重複排除
-    dates = sorted({r.date for r in requirement_items} | {r.date for r in request_items})
+    dates = sorted({r.date for r in requirement_items} | {r.date for r in shift_items})
 
     result = []
     open_time, close_time = store_item.open_time, store_item.close_time
@@ -44,7 +44,7 @@ def get_shortage(store_id: str, date_from: str, date_to: str) -> list[ShortageRe
             required = sum(r.required_count for r in requirement_items
                         if r.date == date and _covers(r.start_time, r.end_time, slot, open_time, close_time))
             # 時間帯ごとの希望人数の取り出し
-            available = sum(1 for r in request_items
+            available = sum(1 for r in shift_items
                         if r.date == date and _covers(r.start_time, r.end_time, slot, open_time, close_time))
             shortage = required - available
             if shortage != 0:
