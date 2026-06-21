@@ -1,8 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import shift_requests, shift_requirements, shortage, shifts, staff, store
-
-app = FastAPI()
+from app.utils.auth import require_token
+app = FastAPI(dependencies=[Depends(require_token)])
 
 app.add_middleware(
   CORSMiddleware,

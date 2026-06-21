@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 import Nav from "@/components/Nav";
+import TokenGate from "@/components/TokenGate";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,10 +32,12 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-neutral-50">
         <Providers>
-          <Nav />
-          <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
-            {children}
-          </main>
+          <TokenGate>
+            <Nav />
+            <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
+              {children}
+            </main>
+          </TokenGate>
         </Providers>
       </body>
     </html>

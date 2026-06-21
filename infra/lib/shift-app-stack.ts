@@ -52,6 +52,8 @@ export class ShiftAppStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(30),
       environment: {
         TABLE_NAME: table.tableName,
+        // 共有トークン。デプロイ時に API_TOKEN を export して渡す（gitには入れない）
+        API_TOKEN: process.env.API_TOKEN ?? '',
       },
     });
 
@@ -66,6 +68,9 @@ export class ShiftAppStack extends cdk.Stack {
       proxy: true,
       deployOptions: {
         stageName: 'api',
+        // コスト保護：レート上限を低めに。超過分は API Gateway が429で弾く(Lambda起動せず)。
+        throttlingRateLimit: 20, // 平均 req/秒
+        throttlingBurstLimit: 10, // 瞬間バースト
       },
       defaultCorsPreflightOptions: {
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
