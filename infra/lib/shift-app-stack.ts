@@ -75,7 +75,7 @@ export class ShiftAppStack extends cdk.Stack {
       defaultCorsPreflightOptions: {
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
         allowMethods: apigateway.Cors.ALL_METHODS,
-        allowHeaders: [...apigateway.Cors.DEFAULT_HEADERS, 'X-Role'],
+        allowHeaders: [...apigateway.Cors.DEFAULT_HEADERS, 'X-Role', 'X-Auth-Token'],
       },
     });
 
