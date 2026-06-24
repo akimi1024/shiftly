@@ -3,6 +3,9 @@
 小規模店舗（飲食店等）の**シフト調整業務を支援する**Webアプリ。
 店長を主な利用者とし、バイトのシフト希望の管理・必要人数の設定・過不足チェック・確定シフト作成を行う。
 
+> **⚠️ 現状は MVP（Minimum Viable Product）です。**
+> 必要最小限の機能のみを実装した検証段階で、認証は簡易な共有トークン方式、店舗は単一前提など割り切った設計になっています。フィードバックを受けて段階的に拡張していく予定です。
+
 > 設計方針：アプリは判断を代替しない（自動シフト生成・最適化はしない）。あくまで店長の意思決定を支援する。
 
 ---
@@ -129,48 +132,7 @@ npm run dev
 
 http://localhost:3000 で起動。
 
----
-
-## デプロイ（AWS）
-
-CDK で Lambda / API Gateway / DynamoDB / S3 / CloudFront を一括構築する。
-
-```bash
-cd infra
-npm install
-npx cdk bootstrap   # 初回のみ
-```
-
-### フロントを本番 API 向けにビルド → デプロイ（2段階）
-
-API の URL はデプロイ後に確定するため、初回は2段階で行う。
-
-```bash
-# 1. まずデプロイして API URL を確定
-API_TOKEN='<共有トークン>' npx cdk deploy
-
-# 2. 出力された ApiUrlOutput を使ってフロントを再ビルド
-cd ../frontend
-NEXT_PUBLIC_API_BASE_URL='<ApiUrl>/api' npm run build
-
-# 3. 再デプロイ（フロント反映）
-cd ../infra
-API_TOKEN='<共有トークン>' npx cdk deploy
-```
-
-初回は本番 DynamoDB が空なので、店舗データ（Store）のシードが必要（店舗が無いと全 API が 404）。
-
-### ⚠️ デプロイ時の重要な注意
-
-- **再デプロイは必ず `API_TOKEN='<値>' npx cdk deploy` でトークンを渡す。**
-  トークンは git に含めず Lambda の環境変数に渡す方式のため、付け忘れると環境変数が空になり**認証が無効化（fail-open）**される。
-- アーキテクチャは **arm64**（Apple Silicon でビルドした wheel に合わせている）。
-
-### 全削除
-
-```bash
-cd infra && npx cdk destroy
-```
+> インフラは AWS CDK（`infra/`）で Lambda / API Gateway / DynamoDB / S3 / CloudFront を構築している。デプロイ手順は省略。
 
 ---
 
